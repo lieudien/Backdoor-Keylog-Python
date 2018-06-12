@@ -1,5 +1,5 @@
 import configparser
-from clean_backdoor import Backdoor
+from backdoor import Backdoor
 
 def main():
 

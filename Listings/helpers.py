@@ -12,7 +12,7 @@ def checkRootPrivilege():
         sys.exit("This application have to run with root access. Try again")
 
 def decode(data):
-    return str(data, 'utf8')
+    return str(data)[2:-1]
 
 def cd(path):
     os.chdir(os.path.expanduser(path))
