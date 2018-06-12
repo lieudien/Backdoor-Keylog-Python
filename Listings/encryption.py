@@ -27,3 +27,4 @@ def encryptFile(filename):
     return
 
 def decryptFile(filename):
+    return
