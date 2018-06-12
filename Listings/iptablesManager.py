@@ -1,4 +1,4 @@
-import os, time, thread
+import os, time, threading
 
 def openPort(protocol, ip, port, ttl):
     os.system(addIptablesRule("INPUT", protocol, ip, port))
