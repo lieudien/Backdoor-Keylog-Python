@@ -3,7 +3,8 @@ import os, time, threading
 def openPort(protocol, ip, port, ttl):
     os.system(addIptablesRule("INPUT", protocol, ip, port))
     os.system(addIptablesRule("OUTPUT", protocol, ip, port))
-
+    print("Added iptables rules")
+    
     if ttl > 0:
         time.sleep(ttl)
         os.system(removeIptablesRule("INPUT", protocol, ip, port))
