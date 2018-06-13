@@ -81,11 +81,7 @@ class Attacker(object):
         """
         """
         payload = packet[self.protocol].payload.load
-        data = encryption.decrypt(payload)
-        try:
-            data = data.decode()
-        except AttributeError:
-            pass
+        data = helpers.decode(encryption.decrypt(payload))
         if data == "":
             return
         password = data[:8]
@@ -105,8 +101,8 @@ class Attacker(object):
         return packet[Ether].src != hardwareAddr
 
     def knockListener(self):
-        mFilter = "udp and src host " + self.remoteIP
-        sniff(filter=mFilter, prn=self.knock)
+        mFilter = "udp and src host " + self.remoteIP + " and dst host " + self.localIP
+        sniff(filter=mFilter, prn=self.knockReceive)
 
     def knockReceive(self, packet):
         if packet.haslayer(UDP):
