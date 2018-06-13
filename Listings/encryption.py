@@ -33,7 +33,7 @@ def decrypt(data):
 
 def encryptFile(inputFile):
     # Randomize initial vector
-    iv = ''.join(chr(random.randint(0, 0xFF)) for _ in range(IV_LEN))
+    iv = ''.join(chr(random.randint(0, 0xFF)) for _ in range(16))
     # Set encryption mode to CBC
     enc = AES.new(filekey, AES.MODE_CBC, iv)
 

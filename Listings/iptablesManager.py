@@ -1,10 +1,15 @@
 import os, time, threading
 
+def run(protocol, ip, port, ttl):
+    iptables_thread = threading.Thread(target=openPort, args=[protocol, ip, port, ttl])
+    iptables_thread.setDaemon = True
+    iptables_thread.start()
+
 def openPort(protocol, ip, port, ttl):
     os.system(addIptablesRule("INPUT", protocol, ip, port))
     os.system(addIptablesRule("OUTPUT", protocol, ip, port))
     print("Added iptables rules")
-    
+
     if ttl > 0:
         time.sleep(ttl)
         os.system(removeIptablesRule("INPUT", protocol, ip, port))

