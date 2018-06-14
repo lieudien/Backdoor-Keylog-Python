@@ -1,9 +1,9 @@
-import configparser
+import ConfigParser
 from attacker import Attacker
 
 def main():
 
-    config = configparser.ConfigParser()
+    config = ConfigParser.ConfigParser()
     config.read('setup.config')
 
     localIP = config.get('Attacker', 'localIP')
