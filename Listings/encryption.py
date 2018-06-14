@@ -56,11 +56,13 @@ def encryptFile(inputFile):
 def decryptFile(inputFile):
     try:
         with open(inputFile, 'rb') as inFile:
-            filesize = struct.unpack('<Q', str(inFile.read(FILENAME_SIZE)))[0]
+            filesize = struct.unpack('<Q', str(inFile.read(FILESIZE_SIZE)))[0]
             iv = inFile.read(IV_LEN)
             dec = AES.new(filekey, AES.MODE_CBC, iv)
-            filename = dec.decrypt(struct.unpack(str(FILENAME_SIZE) + 's', str(inFile.read(FILENAME_SIZE))))[0]
+
+            filename = dec.decrypt(struct.unpack(str(FILENAME_SIZE) + 's', str(inFile.read(FILENAME_SIZE)))[0])
             filename = filename.rstrip('\x00')
+
 
             try:
                 with open(filename, 'wb') as outFile:
