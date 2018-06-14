@@ -33,7 +33,7 @@ def decrypt(data):
 
 def encryptFile(inputFile):
     # Randomize initial vector
-    iv = ''.join(chr(random.randint(0, 0xFF)) for _ in range(16))
+    iv = os.urandom(IV_LEN)
     # Set encryption mode to CBC
     enc = AES.new(filekey, AES.MODE_CBC, iv)
 
@@ -56,7 +56,7 @@ def encryptFile(inputFile):
 def decryptFile(inputFile):
     try:
         with open(inputFile, 'rb') as inFile:
-            filesize = struct.unpack('<Q', str(inputFile.read(FILENAME_SIZE)))[0]
+            filesize = struct.unpack('<Q', str(inFile.read(FILENAME_SIZE)))[0]
             iv = inFile.read(IV_LEN)
             dec = AES.new(filekey, AES.MODE_CBC, iv)
             filename = dec.decrypt(struct.unpack(str(FILENAME_SIZE) + 's', str(inFile.read(FILENAME_SIZE))))[0]
