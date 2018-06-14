@@ -33,13 +33,13 @@ def decrypt(data):
 
 def encryptFile(inputFile):
     # Randomize initial vector
-    iv = ''.join(chr(random.randint(0, 0xFF)) for _ in range(16))
+    iv = ''.join(chr(random.randint(0, 0xFF)) for _ in range(IV_LEN))
     # Set encryption mode to CBC
     enc = AES.new(filekey, AES.MODE_CBC, iv)
 
     filesize = os.path.getsize(inputFile)
     encString = (struct.pack('<Q', filesize)) + iv
-    encString += (enc.encrypt(struct.pack(str(FILENAME_SIZE) + 's', inputFile)))
+    encString += (enc.encrypt(struct.pack(str(FILENAME_SIZE) + 's', os.path.basename(inputFile))))
 
     with open(inputFile, 'rb') as inFile:
         while True:
