@@ -1,5 +1,5 @@
 import setproctitle
-import os, sys
+import os, sys, socket
 
 
 def maskProcess():
