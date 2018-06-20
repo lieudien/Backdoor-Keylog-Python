@@ -81,9 +81,8 @@ class Attacker(object):
 
     def knockListener(self):
         mFilter = "udp and src host " + self.remoteIP + " and src port " + str(self.remotePort)
-        while self.state != 3:
+        while True:
             sniff(filter=mFilter, prn=self.knockReceive, count=1)
-        self.state = 0
 
     def knockReceive(self, packet):
         if packet.haslayer(UDP):
@@ -94,8 +93,9 @@ class Attacker(object):
                 self.state = 2
             elif port == self.knockList[2] and self.state == 2:
                 self.state = 3
-                print("Knocking successfully...Openning port for receiving" % self.state)
+                print("Knocking successfully...Openning port for receiving")
                 self.acceptRequest()
+                self.state = 0
             else:
                 self.state = 0
 
