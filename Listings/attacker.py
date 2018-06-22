@@ -20,10 +20,10 @@ result stored in tcp payload
 
 class Attacker(object):
 
-    def __init__(self, lhost, lport, lisport, rhost, rport, proto, password, kList, ttl):
+    def __init__(self, lhost, lport, fport, rhost, rport, proto, password, kList, ttl):
         self.localIP = lhost
         self.localPort = int(lport)
-        self.listenPort = int(lisport)
+        self.filePort = int(fport)
         self.remoteIP = rhost
         self.remotePort = int(rport)
         self.protocol = proto.upper()
@@ -100,10 +100,10 @@ class Attacker(object):
                 self.state = 0
 
     def acceptRequest(self):
-        iptablesManager.run(self.protocol, self.remoteIP, str(self.listenPort), self.ttl)
+        iptablesManager.run(self.protocol, self.remoteIP, str(self.filePort), self.ttl)
 
         sock = helpers.createSocket()
-        port = self.listenPort
+        port = self.filePort
         sock.bind((self.localIP, port))
 
         sock.listen(1)
