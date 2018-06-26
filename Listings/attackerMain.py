@@ -12,11 +12,11 @@ def main():
     remotePort = config.get('Attacker', 'remotePort')
     protocol = config.get('General', 'protocol')
     password = config.get('Encryption', 'password')
-    filePort = config.get('General', 'filePort')
     knockList = config.get('General', 'knockList')
+    filePort = config.get('General', 'filePort')
     ttl = config.get('General', 'ttl')
 
-    print(localIP, localPort, filePort, remoteIP, remotePort, protocol, password)
+    print(localIP, localPort, remoteIP, remotePort, protocol, filePort)
     attacker = Attacker(localIP, localPort, filePort, remoteIP, remotePort, protocol, password, knockList, ttl)
     attacker.run()
 

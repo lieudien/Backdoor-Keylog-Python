@@ -11,14 +11,14 @@ class MyEventHandler(PatternMatchingEventHandler):
 
     def on_created(self, event):
         print("Create a file")
-        #self.fileTransfer.sendFile(event.src_path)
+        self.fileTransfer.sendFile(event.src_path)
 
     def on_modified(self, event):
         if type(event) == DirModifiedEvent:
             return
 
         print("Modified a file")
-        #self.fileTransfer.sendFile(event.src_path)
+        self.fileTransfer.sendFile(event.src_path)
 
 class FileMonitor(object):
     def __init__(self):

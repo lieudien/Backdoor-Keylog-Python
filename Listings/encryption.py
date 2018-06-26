@@ -54,6 +54,7 @@ def encryptFile(inputFile):
     return encString
 
 def decryptFile(inputFile):
+    filename = ""
     try:
         with open(inputFile, 'rb') as inFile:
             filesize = struct.unpack('<Q', str(inFile.read(FILESIZE_SIZE)))[0]
@@ -62,7 +63,6 @@ def decryptFile(inputFile):
 
             filename = dec.decrypt(struct.unpack(str(FILENAME_SIZE) + 's', str(inFile.read(FILENAME_SIZE)))[0])
             filename = filename.rstrip('\x00')
-
 
             try:
                 with open(filename, 'wb') as outFile:
@@ -77,9 +77,9 @@ def decryptFile(inputFile):
                     outFile.truncate(filesize)
             except IOError as err:
                 print("IO Exception: {}".format(str(e)))
-                return False
+                return False, None
     except IOError as err:
         print("IO Exception: {}".format(str(e)))
-        return False
+        return False, None
 
-    return True
+    return True, filename
